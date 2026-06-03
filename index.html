@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista de Compras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f5f3ee;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 3rem 1rem;
+      color: #1a1a1a;
+    }
+
+    .container { width: 100%; max-width: 520px; }
+
+    h1.titulo {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(56px, 12vw, 80px);
+      font-weight: 900;
+      letter-spacing: -3px;
+      color: #1a1a1a;
+      line-height: 1;
+      margin-bottom: 0.15rem;
+    }
+
+    .subtitulo {
+      font-size: 12px;
+      color: #888;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+    }
+
+    /* status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 12px;
+      color: #aaa;
+      min-height: 18px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ccc;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .status-dot.online  { background: #7cb87c; }
+    .status-dot.offline { background: #e0a060; }
+    .status-dot.erro    { background: #c0392b; }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.75rem;
+    }
+
+    .add-row input {
+      flex: 1;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      padding: 10px 14px;
+      border: 1px solid #d8d4cc;
+      border-radius: 8px;
+      background: #fff;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .add-row input:focus { border-color: #888; }
+    .add-row input::placeholder { color: #bbb; }
+
+    .add-row button {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 18px;
+      border: 1px solid #1a1a1a;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .add-row button:hover { background: #333; }
+    .add-row button:active { transform: scale(0.98); }
+
+    .secao-titulo {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 0.5rem;
+    }
+
+    ul.lista {
+      list-style: none;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e8e4de;
+      overflow: hidden;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      border-bottom: 1px solid #f0ece6;
+      transition: background 0.1s;
+    }
+
+    .item:last-child { border-bottom: none; }
+    .item:hover { background: #faf8f5; }
+
+    .item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #1a1a1a;
+      flex-shrink: 0;
+    }
+
+    .item label {
+      flex: 1;
+      cursor: pointer;
+      font-size: 15px;
+      color: #1a1a1a;
+      transition: all 0.2s ease;
+      line-height: 1.4;
+    }
+
+    .item.done label {
+      text-decoration: line-through;
+      color: #bbb;
+    }
+
+    .item .del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #ccc;
+      padding: 4px;
+      font-size: 18px;
+      line-height: 1;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s;
+    }
+
+    .item:hover .del { opacity: 1; }
+    .item .del:hover { color: #c0392b; }
+
+    .vazio {
+      text-align: center;
+      padding: 3rem 0;
+      color: #bbb;
+      font-size: 14px;
+    }
+
+    .rodape {
+      margin-top: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .stats { font-size: 13px; color: #999; }
+
+    .botoes-rodape { display: flex; gap: 12px; align-items: center; }
+
+    .btn-rodape {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: #bbb;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 0;
+      text-decoration: underline;
+      white-space: nowrap;
+    }
+
+    .btn-rodape:hover { color: #c0392b; }
+    .btn-rodape.ocultar:hover { color: #555; }
+    .btn-rodape.ocultar.ativo { color: #1a1a1a; font-weight: 500; }
+
+    /* config overlay */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .overlay.visible { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+
+    .modal h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      margin-bottom: 0.4rem;
+    }
+
+    .modal p { font-size: 13px; color: #888; margin-bottom: 1.25rem; line-height: 1.6; }
+
+    .modal label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 4px;
+      margin-top: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .modal input[type="text"] {
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 9px 12px;
+      border: 1px solid #d8d4cc;
+      border-radius: 8px;
+      background: #faf8f5;
+      color: #1a1a1a;
+      outline: none;
+    }
+
+    .modal input[type="text"]:focus { border-color: #888; }
+
+    .modal-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 1.5rem;
+    }
+
+    .btn-guardar {
+      flex: 1;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px;
+      border: 1px solid #1a1a1a;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .btn-guardar:hover { background: #333; }
+
+    .btn-cancelar {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px 16px;
+      border: 1px solid #d8d4cc;
+      border-radius: 8px;
+      background: #fff;
+      color: #888;
+      cursor: pointer;
+    }
+
+    .btn-cancelar:hover { background: #faf8f5; }
+
+    .erro-msg {
+      font-size: 12px;
+      color: #c0392b;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .config-link {
+      font-size: 11px;
+      color: #ccc;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .config-link:hover { color: #888; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .item { animation: fadeIn 0.18s ease; }
+  </style>
+</head>
+<body>
+
+  <!-- Config Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2>Configurar Firebase</h2>
+      <p>Cola aqui as credenciais do teu projeto Firebase. Só precisas de fazer isto uma vez — ficam guardadas no browser.</p>
+
+      <label>API Key</label>
+      <input type="text" id="cfg-apiKey" placeholder="AIzaSy..." />
+
+      <label>Auth Domain</label>
+      <input type="text" id="cfg-authDomain" placeholder="o-meu-projeto.firebaseapp.com" />
+
+      <label>Project ID</label>
+      <input type="text" id="cfg-projectId" placeholder="o-meu-projeto" />
+
+      <label>Database URL</label>
+      <input type="text" id="cfg-databaseURL" placeholder="https://o-meu-projeto-default-rtdb.firebaseio.com" />
+
+      <p class="erro-msg" id="cfg-erro">Por favor preenche todos os campos.</p>
+
+      <div class="modal-btns">
+        <button class="btn-cancelar" id="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarConfig()">Ligar ao Firebase →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1 class="titulo">COMPRAS</h1>
+    <p class="subtitulo">Lista de compras</p>
+
+    <div class="status-bar">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusTexto">A ligar...</span>
+      <button class="config-link" id="configLink" onclick="abrirModal()" style="margin-left:auto; display:none;">⚙ configurar</button>
+    </div>
+
+    <div class="add-row">
+      <input type="text" id="novoItem" placeholder="Adicionar item..." autocomplete="off" />
+      <button onclick="adicionarItem()">+ Adicionar</button>
+    </div>
+
+    <p class="secao-titulo" id="secaoTitulo" style="display:none;">A comprar</p>
+    <ul class="lista" id="lista"></ul>
+    <p class="vazio" id="vazio">Nenhum item ainda. Começa a adicionar!</p>
+
+    <div class="rodape" id="rodape" style="display:none;">
+      <span class="stats" id="stats"></span>
+      <div class="botoes-rodape">
+        <button class="btn-rodape" onclick="limparConcluidos()">Limpar concluídos</button>
+        <button class="btn-rodape ocultar" id="btnOcultar" onclick="toggleOcultar()">Ocultar concluídos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    // ── Config ─────────────────────────────────────────────────
+    const CFG_KEY = 'compras_firebase_cfg';
+    let db = null;
+    let listaRef = null;
+    let ocultarConcluidos = localStorage.getItem('compras_ocultar') === 'true';
+
+    function carregarConfig() {
+      try { return JSON.parse(localStorage.getItem(CFG_KEY)); } catch { return null; }
+    }
+
+    function guardarConfigLocal(cfg) {
+      localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    }
+
+    function abrirModal() {
+      const cfg = carregarConfig();
+      if (cfg) {
+        document.getElementById('cfg-apiKey').value      = cfg.apiKey      || '';
+        document.getElementById('cfg-authDomain').value  = cfg.authDomain  || '';
+        document.getElementById('cfg-projectId').value   = cfg.projectId   || '';
+        document.getElementById('cfg-databaseURL').value = cfg.databaseURL || '';
+      }
+      document.getElementById('btn-cancelar').style.display = carregarConfig() ? 'block' : 'none';
+      document.getElementById('overlay').classList.add('visible');
+    }
+
+    function fecharModal() {
+      document.getElementById('overlay').classList.remove('visible');
+    }
+
+    function guardarConfig() {
+      const cfg = {
+        apiKey:      document.getElementById('cfg-apiKey').value.trim(),
+        authDomain:  document.getElementById('cfg-authDomain').value.trim(),
+        projectId:   document.getElementById('cfg-projectId').value.trim(),
+        databaseURL: document.getElementById('cfg-databaseURL').value.trim(),
+      };
+      const erroEl = document.getElementById('cfg-erro');
+      if (!cfg.apiKey || !cfg.authDomain || !cfg.projectId || !cfg.databaseURL) {
+        erroEl.style.display = 'block';
+        return;
+      }
+      erroEl.style.display = 'none';
+      guardarConfigLocal(cfg);
+      fecharModal();
+      ligarFirebase(cfg);
+    }
+
+    // ── Firebase ───────────────────────────────────────────────
+    function setStatus(tipo, texto) {
+      const dot   = document.getElementById('statusDot');
+      const texto_el = document.getElementById('statusTexto');
+      dot.className  = 'status-dot ' + tipo;
+      texto_el.textContent = texto;
+      document.getElementById('configLink').style.display = 'inline';
+    }
+
+    function ligarFirebase(cfg) {
+      setStatus('', 'A ligar ao Firebase...');
+      try {
+        // Se já existe app, apaga-a
+        const apps = firebase.apps;
+        if (apps.length > 0) apps[0].delete().catch(() => {});
+      } catch(e) {}
+
+      try {
+        const app = firebase.initializeApp(cfg);
+        db = firebase.database(app);
+        listaRef = db.ref('lista');
+
+        listaRef.on('value', snapshot => {
+          const data = snapshot.val();
+          itens = data ? Object.values(data) : [];
+          setStatus('online', 'Ligado · partilhado em tempo real');
+          render();
+        }, err => {
+          setStatus('erro', 'Erro de acesso — verifica as credenciais');
+        });
+
+      } catch(e) {
+        setStatus('erro', 'Configuração inválida — clica em ⚙ configurar');
+      }
+    }
+
+    // ── State ──────────────────────────────────────────────────
+    let itens = [];
+
+    function gerarId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    // ── CRUD (escrita no Firebase) ─────────────────────────────
+    function adicionarItem() {
+      const input = document.getElementById('novoItem');
+      const nome  = input.value.trim();
+      if (!nome || !listaRef) return;
+      const id   = gerarId();
+      const item = { id, nome, feito: false, addedAt: Date.now(), doneAt: null };
+      listaRef.child(id).set(item);
+      input.value = '';
+      input.focus();
+    }
+
+    function toggle(id) {
+      if (!listaRef) return;
+      const item = itens.find(i => i.id === id);
+      if (!item) return;
+      const feito = !item.feito;
+      listaRef.child(id).update({ feito, doneAt: feito ? Date.now() : null });
+    }
+
+    function remover(id) {
+      if (!listaRef) return;
+      listaRef.child(id).remove();
+    }
+
+    function limparConcluidos() {
+      if (!listaRef) return;
+      itens.filter(i => i.feito).forEach(i => listaRef.child(i.id).remove());
+    }
+
+    function toggleOcultar() {
+      ocultarConcluidos = !ocultarConcluidos;
+      localStorage.setItem('compras_ocultar', String(ocultarConcluidos));
+      render();
+    }
+
+    // ── Render ─────────────────────────────────────────────────
+    function listaOrdenada() {
+      const pendentes = itens.filter(i => !i.feito).sort((a, b) => b.addedAt - a.addedAt);
+      const feitos    = itens.filter(i =>  i.feito).sort((a, b) => b.doneAt  - a.doneAt);
+      return [...pendentes, ...feitos];
+    }
+
+    function render() {
+      const lista       = document.getElementById('lista');
+      const vazio       = document.getElementById('vazio');
+      const stats       = document.getElementById('stats');
+      const rodape      = document.getElementById('rodape');
+      const secaoTitulo = document.getElementById('secaoTitulo');
+      const btnOcultar  = document.getElementById('btnOcultar');
+      lista.innerHTML   = '';
+
+      if (itens.length === 0) {
+        vazio.style.display       = 'block';
+        rodape.style.display      = 'none';
+        secaoTitulo.style.display = 'none';
+        return;
+      }
+
+      vazio.style.display       = 'none';
+      secaoTitulo.style.display = 'block';
+      rodape.style.display      = 'flex';
+
+      btnOcultar.textContent = ocultarConcluidos ? 'Mostrar concluídos' : 'Ocultar concluídos';
+      btnOcultar.classList.toggle('ativo', ocultarConcluidos);
+
+      const ordenados = listaOrdenada();
+      const visiveis  = ocultarConcluidos ? ordenados.filter(i => !i.feito) : ordenados;
+
+      visiveis.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'item' + (item.feito ? ' done' : '');
+        li.innerHTML = `
+          <input type="checkbox" id="cb${item.id}" ${item.feito ? 'checked' : ''} onchange="toggle('${item.id}')">
+          <label for="cb${item.id}">${escapeHtml(item.nome)}</label>
+          <button class="del" onclick="remover('${item.id}')" title="Remover">&#x2715;</button>
+        `;
+        lista.appendChild(li);
+      });
+
+      const feitosCount = itens.filter(i => i.feito).length;
+      stats.textContent = `${feitosCount} de ${itens.length} itens concluídos`;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    document.getElementById('novoItem').addEventListener('keydown', e => {
+      if (e.key === 'Enter') adicionarItem();
+    });
+
+    // ── Boot ───────────────────────────────────────────────────
+    const cfg = carregarConfig();
+    if (cfg && cfg.apiKey) {
+      ligarFirebase(cfg);
+    } else {
+      setStatus('offline', 'Firebase não configurado');
+      setTimeout(abrirModal, 400);
+    }
+  </script>
+</body>
+</html>
