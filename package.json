@@ -1,0 +1,1 @@
+{"name":"menu-compras-v2","private":true,"version":"2.0.0","description":"Aplicação familiar Compras & Refeições","engines":{"node":">=20"},"dependencies":{"firebase-admin":"^13.0.0"}}

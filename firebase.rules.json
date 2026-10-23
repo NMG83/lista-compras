@@ -1,0 +1,69 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "households": {
+      "$household": {
+        "members": {
+          "$uid": {
+            ".read": "auth !== null && auth.uid === $uid",
+            ".write": false
+          }
+        },
+        "shoppingItems": {
+          ".read": "auth !== null && root.child('households').child($household).child('members').child(auth.uid).val() === true",
+          "$itemId": {
+            ".write": "auth !== null && root.child('households').child($household).child('members').child(auth.uid).val() === true",
+            ".validate": "newData.hasChildren(['name','category','supermarket','completed','createdAt','createdBy']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 100 && newData.child('category').isString() && newData.child('category').val().length <= 40 && newData.child('supermarket').isString() && newData.child('supermarket').val().length <= 40 && newData.child('completed').isBoolean() && newData.child('createdAt').isNumber() && newData.child('createdBy').isString() && (data.exists() ? newData.child('createdBy').val() === data.child('createdBy').val() : newData.child('createdBy').val() === auth.uid)",
+            "name": {".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"},
+            "category": {".validate": "newData.isString() && newData.val().length <= 40"},
+            "supermarket": {".validate": "newData.isString() && newData.val().length <= 40"},
+            "completed": {".validate": "newData.isBoolean()"},
+            "createdAt": {".validate": "newData.isNumber()"},
+            "createdBy": {".validate": "newData.isString()"},
+            "completedAt": {".validate": "newData.isNumber()"},
+            "$other": {".validate": false}
+          }
+        },
+        "meals": {
+          ".read": "auth !== null && root.child('households').child($household).child('members').child(auth.uid).val() === true",
+          "$date": {
+            "$type": {
+              ".write": "auth !== null && root.child('households').child($household).child('members').child(auth.uid).val() === true && ($type === 'lunch' || $type === 'dinner')",
+              ".validate": "newData.hasChildren(['date','mealType','mealName','eatingAtHome','notes','updatedAt']) && newData.child('date').val() === $date && newData.child('mealType').val() === $type && newData.child('mealName').isString() && newData.child('mealName').val().length <= 150 && newData.child('eatingAtHome').isBoolean() && newData.child('notes').isString() && newData.child('notes').val().length <= 500 && newData.child('updatedAt').isNumber()",
+              "date": {".validate": "newData.isString()"},
+              "mealType": {".validate": "newData.val() === 'lunch' || newData.val() === 'dinner'"},
+              "mealName": {".validate": "newData.isString() && newData.val().length <= 150"},
+              "eatingAtHome": {".validate": "newData.isBoolean()"},
+              "notes": {".validate": "newData.isString() && newData.val().length <= 500"},
+              "updatedAt": {".validate": "newData.isNumber()"},
+              "$other": {".validate": false}
+            }
+          }
+        },
+        "productPreferences": {
+          ".read": "auth !== null && root.child('households').child($household).child('members').child(auth.uid).val() === true",
+          "$id": {
+            ".write": "auth !== null && root.child('households').child($household).child('members').child(auth.uid).val() === true",
+            ".validate": "newData.hasChildren(['productName','preferredCategory','preferredSupermarket','lastUsed']) && newData.child('productName').isString() && newData.child('productName').val().length <= 100 && newData.child('preferredCategory').isString() && newData.child('preferredSupermarket').isString() && newData.child('lastUsed').isNumber()",
+            "productName": {".validate": "newData.isString() && newData.val().length <= 100"},
+            "preferredCategory": {".validate": "newData.isString() && newData.val().length <= 40"},
+            "preferredSupermarket": {".validate": "newData.isString() && newData.val().length <= 40"},
+            "lastUsed": {".validate": "newData.isNumber()"},
+            "$other": {".validate": false}
+          }
+        },
+        "mealHistory": {
+          ".read": "auth !== null && root.child('households').child($household).child('members').child(auth.uid).val() === true",
+          "$id": {
+            ".write": "auth !== null && root.child('households').child($household).child('members').child(auth.uid).val() === true",
+            ".validate": "newData.hasChildren(['mealName','lastUsed']) && newData.child('mealName').isString() && newData.child('mealName').val().length > 0 && newData.child('mealName').val().length <= 150 && newData.child('lastUsed').isNumber()",
+            "mealName": {".validate": "newData.isString() && newData.val().length <= 150"},
+            "lastUsed": {".validate": "newData.isNumber()"},
+            "$other": {".validate": false}
+          }
+        }
+      }
+    }
+  }
+}
