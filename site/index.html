@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Compras e refeições da família">
+  <title>Menu & Compras</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./config.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <header class="topbar">
+    <nav class="tabs" aria-label="Navegação principal">
+      <button class="tab active" data-view="shopping" type="button"><span class="tab-icon">🛒</span> Compras</button>
+      <button class="tab" data-view="meals" type="button"><span class="tab-icon">🍽️</span> Refeições</button>
+    </nav>
+  </header>
+  <main id="app" class="main" hidden>
+    <div class="main-head">
+      <h1 id="screenTitle">Compras</h1>
+      <div class="account"><span id="householdName">Família</span><button id="logoutBtn" class="text-btn" type="button" title="Terminar sessão">Sair</button></div>
+    </div>
+    <div id="connectionBadge" class="connection" aria-live="polite"></div>
+    <section id="shoppingView" aria-label="Lista de compras">
+      <form id="addForm" class="add-form">
+        <input id="newItem" maxlength="100" autocomplete="off" placeholder="O que é preciso comprar?" aria-label="Novo produto" required>
+        <button type="submit" class="add-button" title="Adicionar produto" aria-label="Adicionar produto">+</button>
+      </form>
+      <div class="toolbar"><button id="hideDoneBtn" class="text-btn" type="button">◎ &nbsp; Ocultar concluídos</button><button id="clearDoneBtn" class="text-btn dangerous" type="button" hidden>Limpar concluídos</button></div>
+      <div id="shoppingGroups"></div>
+      <div id="shoppingEmpty" class="empty">Ainda não há produtos para comprar.</div>
+    </section>
+    <section id="mealsView" aria-label="Plano de refeições" hidden>
+      <div class="week-nav"><button id="prevWeek" type="button" class="outline-btn" aria-label="Semana anterior">←</button><div class="week-middle"><strong id="weekLabel"></strong><button id="thisWeek" type="button" class="text-btn">Esta semana</button></div><button id="nextWeek" type="button" class="outline-btn" aria-label="Semana seguinte">→</button></div>
+      <div class="meal-grid-head"><span>Dia</span><span>Almoço</span><span>Jantar</span></div>
+      <div id="mealGrid"></div>
+      <div class="muted-note">Toca numa refeição para editar, marcar “Fora de casa”, copiar ou pedir ingredientes.</div>
+    </section>
+    <button id="aiButton" class="ai-fab" type="button" title="Assistente de IA" aria-label="Abrir assistente de IA">✦ <span>IA</span></button>
+  </main>
+  <nav class="bottom-nav" id="bottomNav" aria-label="Navegação móvel" hidden><button class="bottom-tab active" data-view="shopping" type="button">🛒 <span>Compras</span></button><button class="bottom-tab" data-view="meals" type="button">🍽️ <span>Refeições</span></button></nav>
+  <section id="loginView" class="login-wrap" aria-label="Iniciar sessão">
+    <div class="login-card">
+      <div class="login-mark">🛒</div><h1>Menu & Compras</h1><p>A lista e as refeições da nossa família.</p>
+      <div id="loginError" class="error" role="alert" hidden></div>
+      <form id="loginForm"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Palavra-passe</label><input id="password" type="password" autocomplete="current-password" required><button id="loginBtn" type="submit" class="primary-btn">Entrar</button></form>
+      <button id="resetPassword" class="text-btn" type="button">Recuperar palavra-passe</button>
+      <div id="demoArea" class="demo-area"><span>Queres explorar antes de configurar?</span><button id="demoBtn" class="outline-btn" type="button">Experimentar demonstração</button></div>
+      <p class="login-foot">Apenas utilizadores autorizados têm acesso aos dados familiares.</p>
+    </div>
+  </section>
+  <div id="modalOverlay" class="overlay" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle"></h2><button type="button" id="closeModal" class="icon-btn" aria-label="Fechar">✕</button></div><div id="modalBody"></div><div id="modalActions" class="modal-actions"></div></section></div>
+  <aside id="aiPanel" class="ai-panel" hidden aria-label="Assistente de inteligência artificial"><div class="ai-header"><div><strong>✦ Assistente</strong><p>Compras & Refeições</p></div><button id="closeAI" class="icon-btn" aria-label="Fechar assistente">✕</button></div><div id="chatMessages" class="chat-messages"><div class="chat-bubble assistant">Posso ajudar a organizar as compras e as refeições. Experimenta: “Adiciona leite e bananas” ou “Dá-me ideias para jantar”.</div></div><div id="aiPending"></div><form id="chatForm" class="chat-form"><input id="chatInput" placeholder="Escreve um pedido..." maxlength="700" aria-label="Mensagem para o assistente"><button type="button" id="micBtn" class="icon-btn" title="Ditar" aria-label="Ditar">🎙</button><button type="submit" class="primary-icon" aria-label="Enviar">➤</button></form><p class="ai-disclaimer">Ações propostas pela IA requerem confirmação.</p></aside>
+</body>
+</html>
